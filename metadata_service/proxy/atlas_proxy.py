@@ -990,8 +990,10 @@ class AtlasProxy(BaseProxy):
         resources = list()
         if resource_type == ResourceType.Table.name:
             type_regex = "(.*)_table$"
+            entity_type = 'Table'
         # elif resource_type == ResourceType.Dashboard.name:
         #     type_regex = "Dashboard"
+        #     entity_type = 'Dashboard'
         else:
             LOGGER.exception(f'Resource Type ({resource_type}) is not yet implemented')
             raise NotImplemented
@@ -1010,22 +1012,9 @@ class AtlasProxy(BaseProxy):
                     re.compile(type_regex).match(item['typeName'])):
                 resource_guids.add(item[self.GUID_KEY])
 
-        params = {
-            'typeName': self.TABLE_ENTITY,
-            'excludeDeletedEntities': True,
-            'entityFilters': {
-                'condition': 'AND',
-                'criterion': [
-                    {
-                        'attributeName': 'owner',
-                        'operator': 'startsWith',
-                        'attributeValue': user_id.lower()
-                    }
-                ]
-            },
-            'attributes': [self.GUID_KEY]
-        }
-        table_entities = self.client.discovery.faceted_search(search_parameters=params)
+        owned_tables_query = f'{entity_type} where owner like "{user_id.lower()}*" and __state = "ACTIVE"'
+        table_entities = self.client.discovery.dsl_search(owned_tables_query)
+
         for table in table_entities.entities or list():
             resource_guids.add(table.guid)
 
