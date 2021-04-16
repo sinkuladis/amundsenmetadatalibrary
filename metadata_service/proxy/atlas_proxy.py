@@ -428,7 +428,7 @@ class AtlasProxy(BaseProxy):
         parsed_reports = app.config['RESOURCE_REPORT_CLIENT'](reports) \
             if app.config['RESOURCE_REPORT_CLIENT'] else reports
 
-        return parsed_reports
+        return sorted(parsed_reports)
 
     def _get_owners(self, data_owners: list, fallback_owner: str = None) -> List[User]:
         owners_detail = list()
@@ -915,7 +915,7 @@ class AtlasProxy(BaseProxy):
                     tag_count=len(item.attributes.get("assignedEntities"))
                 )
             )
-        return tags
+        return sorted(tags, key=lambda x: x.tag_count)
 
     def get_badges(self) -> List:
         badges = list()
